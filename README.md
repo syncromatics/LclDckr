@@ -1,4 +1,4 @@
-# LclDckr
+# LclDckr [![Build Status](https://travis-ci.org/syncromatics/LclDckr.svg?branch=feature%2Fenable-travis-builds)](https://travis-ci.org/syncromatics/LclDckr)
 A dotnet wrapper for Docker's CLI
 
 ## Example usage
