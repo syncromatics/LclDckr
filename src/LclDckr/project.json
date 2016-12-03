@@ -1,0 +1,22 @@
+﻿{
+  "version": "1.0.0-*",
+  "description": "A dotnet wrapper around the docker cli.",
+  "authors":  ["Syncromatics"], 
+
+  "dependencies": {
+    
+  },
+
+  "frameworks": {
+    "netstandard1.3": {
+      "dependencies": {
+        "System.Diagnostics.Process": "4.3.0",
+        "NETStandard.Library": "1.6.0"
+      }
+      
+    },
+    "net451": {
+      "frameworkAssemblies": {"System":  ""}
+    }
+  }
+}
