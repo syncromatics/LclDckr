@@ -1,0 +1,14 @@
+language: csharp
+
+os: linux # Ubuntu 14.04
+dist: trusty
+sudo: required
+dotnet: 1.0.0-preview2-003121
+
+services:
+  - docker
+
+script:
+  - dotnet restore
+  - dotnet build src/LclDckr
+  - dotnet test test/LclDckr.IntegrationTests
