@@ -26,9 +26,10 @@ namespace LclDckr
             _dockerPath = dockerExecutablePath;
         }
 
-        public string Build(string path = ".")
+        public string Build(string path = ".", string filePath =  null)
         {
-            var args = $"build {path}";
+            string fileArg = filePath == null ? "" : $"-f {filePath}";
+            var args = $"build {fileArg} {path}";
             var process = GetDockerProcess(args);
             process.Start();
             process.WaitForExit();

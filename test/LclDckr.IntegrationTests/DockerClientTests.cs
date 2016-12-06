@@ -66,9 +66,10 @@ namespace LclDckr.IntegrationTests
         {
             var client = new DockerClient();
 
-            var dockerfilePath = Directory.GetCurrentDirectory();
+            var contextPath = System.AppContext.BaseDirectory;
+            var dockerFilePath = Path.Combine(contextPath, "Dockerfile");
 
-            var imageId = client.Build(dockerfilePath);
+            var imageId = client.Build(contextPath, dockerFilePath);
 
             var containerName = "lcldckr-build-test";
 
