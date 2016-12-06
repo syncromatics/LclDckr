@@ -1,8 +1,14 @@
 ﻿{
-  "version": "1.0.0-*",
+  "version": "1.0.1-*",
   "description": "A dotnet wrapper around the docker cli.",
-  "authors":  ["Syncromatics"], 
-
+  "authors":  ["Syncromatics"],
+  "packOptions": {
+    "tags": [
+      "Docker",
+      "Local Docker",
+      "Docker Cli"
+    ] 
+  },
   "dependencies": {
     
   },
