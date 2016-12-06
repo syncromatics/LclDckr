@@ -6,6 +6,11 @@
     "LclDckr": "1.0.1-*",
     "dotnet-test-xunit": "2.2.0-preview2-build1029"
   },
+  "buildOptions": {
+    "copyToOutput": [
+      "Dockerfile"
+    ]
+  },
   "frameworks": {
     "netcoreapp1.0": {
       "dependencies": {

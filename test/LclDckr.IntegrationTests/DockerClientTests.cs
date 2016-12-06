@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.IO;
+using System.Linq;
 using LclDckr.Commands.Ps.Filters;
 using Xunit;
 
@@ -65,7 +66,9 @@ namespace LclDckr.IntegrationTests
         {
             var client = new DockerClient();
 
-            var imageId = client.Build();
+            var dockerfilePath = Directory.GetCurrentDirectory();
+
+            var imageId = client.Build(dockerfilePath);
 
             var containerName = "lcldckr-build-test";
 
