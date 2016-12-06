@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using LclDckr.Commands.Ps;
 using LclDckr.Commands.Ps.Filters;
+using LclDckr.Commands.Run;
 
 namespace LclDckr
 {
@@ -54,12 +55,25 @@ namespace LclDckr
         /// <returns>The long uuid of the created container</returns>
         public string RunImage(string imageName, string name, string hostName = null, bool interactive = false)
         {
-            var hostArg = hostName != null ? $"--hostname {hostName}" : "";
-            var interactiveArg = interactive ? "i" : "";
+            var arguments = new RunArguments
+            {
+                Name = name,
+                HostName = hostName,
+                Interactive = interactive
+            };
 
-            var args = $"run -d{interactiveArg} --name {name} {hostArg} {imageName}";
+            return RunImage(imageName, arguments);
+        }
 
-            var process = GetDockerProcess(args);
+        /// <summary>
+        /// Runs the specified image in a new container
+        /// </summary>
+        /// <param name="imageName"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        public string RunImage(string imageName, RunArguments args)
+        {
+            var process = GetDockerProcess($"run {args.ToArgString()} {imageName}");
             process.Start();
             process.WaitForExit();
             process.ThrowForError();
