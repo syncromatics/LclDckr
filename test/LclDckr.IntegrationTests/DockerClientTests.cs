@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.IO;
+using System.Linq;
 using LclDckr.Commands.Ps.Filters;
 using Xunit;
 
@@ -32,6 +33,55 @@ namespace LclDckr.IntegrationTests
 
             id = client.RemoveContainer(containerName);
             Assert.NotNull(id);
+        }
+
+        [Fact]
+        public void Runs_and_replaces_container()
+        {
+            var client = new DockerClient();
+
+            var containerName = "lcldckr-test-2";
+
+            client.RunOrReplace("ubuntu", containerName);
+
+            var runningContainer = client
+                .Ps(true, new[] { new NameFilter(containerName) })
+                .SingleOrDefault();
+
+            Assert.NotNull(runningContainer);
+
+            client.RunOrReplace("ubuntu", containerName);
+
+            client.StopAndRemoveContainer(containerName);
+
+            runningContainer = client
+                .Ps(true, new[] { new NameFilter(containerName) })
+                .SingleOrDefault();
+
+            Assert.Null(runningContainer);
+        }
+
+        [Fact]
+        public void Builds_and_runs_container()
+        {
+            var client = new DockerClient();
+
+            var contextPath = System.AppContext.BaseDirectory;
+            var dockerFilePath = Path.Combine(contextPath, "Dockerfile");
+
+            var imageId = client.Build(contextPath, dockerFilePath);
+
+            var containerName = "lcldckr-build-test";
+
+            client.RunImage(imageId, containerName);
+
+            var container = client
+                .Ps(true, new[] { new NameFilter(containerName) })
+                .SingleOrDefault();
+
+            Assert.NotNull(container);
+
+            client.StopAndRemoveContainer(containerName);
         }
     }
 }
