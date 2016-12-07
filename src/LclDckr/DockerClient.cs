@@ -1,14 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using LclDckr.Commands.Ps;
 using LclDckr.Commands.Ps.Filters;
 using LclDckr.Commands.Run;
 
 namespace LclDckr
 {
+    /// <summary>
+    /// provides wrapper over docker cli operations on containers and images
+    /// </summary>
     public class DockerClient
     {
         private readonly string _dockerPath = "docker";
@@ -27,17 +32,27 @@ namespace LclDckr
             _dockerPath = dockerExecutablePath;
         }
 
-        public string Build(string path = ".", string filePath =  null)
+        /// <summary>
+        /// Builds a docker image
+        /// </summary>
+        /// <param name="path">Path to the context directory</param>
+        /// <param name="filePath">Path to docker file, must include the file i.e. PATH/Dockerfile</param>
+        /// <param name="tag">the name and optionally a tag in name:tag format</param>
+        /// <returns>The identifier for the created iamge. Will be tag if supplied</returns>
+        public string Build(string path = ".", string filePath =  null, string tag = null)
         {
             string fileArg = filePath == null ? "" : $"-f {filePath}";
-            var args = $"build {fileArg} {path}";
-            var process = GetDockerProcess(args);
-            process.Start();
-            process.WaitForExit();
-            process.ThrowForError();
+            string tagArg = tag == null ? "" : $"-t {tag}";
+            var args = $"build {fileArg} {tagArg} {path}";
+            string output;
+            using (var process = GetDockerProcess(args))
+            {
+                process.Start();
+                process.WaitForExit();
+                process.ThrowForError();
 
-            var output = process.StandardOutput
-                .ReadToEnd();
+                output = process.StandardOutput.ReadToEnd();
+            }
 
             const string regex = "Successfully built (?<id>[^\\s]+)";
             var match = Regex.Match(output, regex);
@@ -49,20 +64,22 @@ namespace LclDckr
         /// Runs the specified image in a new container
         /// </summary>
         /// <param name="imageName"></param>
-        /// <param name="name"></param>
-        /// <param name="hostName"></param>
-        /// <param name="interactive"></param>
-        /// <returns>The long uuid of the created container</returns>
-        public string RunImage(string imageName, string name, string hostName = null, bool interactive = false)
+        /// <param name="containerName"></param>
+        /// <returns></returns>
+        public string RunImage(string imageName, string containerName)
         {
-            var arguments = new RunArguments
-            {
-                Name = name,
-                HostName = hostName,
-                Interactive = interactive
-            };
+            return RunImage(imageName, null, new RunArguments {Name = containerName});
+        }
 
-            return RunImage(imageName, arguments);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="imageName"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        public string RunImage(string imageName, RunArguments args)
+        {
+            return RunImage(imageName, null, args);
         }
 
         /// <summary>
@@ -70,15 +87,20 @@ namespace LclDckr
         /// </summary>
         /// <param name="imageName"></param>
         /// <param name="args"></param>
+        /// <param name="tag"></param>
         /// <returns></returns>
-        public string RunImage(string imageName, RunArguments args)
+        public string RunImage(string imageName, string tag, RunArguments args)
         {
-            var process = GetDockerProcess($"run {args.ToArgString()} {imageName}");
-            process.Start();
-            process.WaitForExit();
-            process.ThrowForError();
+            var tagArg = tag != null ? $":{tag}" : "";
 
-            return process.StandardOutput.ReadToEnd();
+            using (var process = GetDockerProcess($"run {args.ToArgString()} {imageName}{tagArg}"))
+            {
+                process.Start();
+                process.WaitForExit();
+                process.ThrowForError();
+
+                return process.StandardOutput.ReadToEnd();
+            }
         }
 
         /// <summary>
@@ -87,14 +109,22 @@ namespace LclDckr
         /// </summary>
         /// <param name="imageName"></param>
         /// <param name="containerName"></param>
-        /// <param name="tag"></param>
-        /// <param name="hostName"></param>
         /// <returns></returns>
-        public string RunOrReplace(string imageName, string containerName, string tag = "latest", string hostName = null)
+        public string RunOrReplace(string imageName, string containerName)
         {
-            StopAndRemoveContainer(containerName);
+            var arguments = new RunArguments
+            {
+                Name = containerName,
+            };
+
+            return RunOrReplace(imageName, null, arguments);
+        }
+
+        public string RunOrReplace(string imageName, string tag, RunArguments args)
+        {
+            StopAndRemoveContainer(args.Name);
             PullImage(imageName, tag);
-            return RunImage(imageName, containerName, hostName);
+            return RunImage(imageName, tag, args);
         }
 
         /// <summary>
@@ -102,14 +132,17 @@ namespace LclDckr
         /// </summary>
         /// <param name="imageName"></param>
         /// <param name="tag"></param>
-        public void PullImage(string imageName, string tag = "latest")
+        public void PullImage(string imageName, string tag = null)
         {
-            var args = $"pull {imageName}:{tag}";
+            var tagArg = tag != null ? $":{tag}" : "";
+            var args = $"pull {imageName}{tagArg}";
 
-            var process = GetDockerProcess(args);
-            process.Start();
-            process.WaitForExit();
-            process.ThrowForError();
+            using (var process = GetDockerProcess(args))
+            {
+                process.Start();
+                process.WaitForExit();
+                process.ThrowForError();
+            }
         }
 
         /// <summary>
@@ -121,12 +154,14 @@ namespace LclDckr
         {
             var args = $"start {name}";
 
-            var process = GetDockerProcess(args);
-            process.Start();
-            process.WaitForExit();
-            process.ThrowForError();
+            using (var process = GetDockerProcess(args))
+            {
+                process.Start();
+                process.WaitForExit();
+                process.ThrowForError();
 
-            return process.StandardOutput.ReadToEnd();
+                return process.StandardOutput.ReadToEnd();
+            }
         }
 
         /// <summary>
@@ -137,12 +172,14 @@ namespace LclDckr
         public string StopContainer(string name)
         {
             var args = $"stop {name}";
-            var process = GetDockerProcess(args);
-            process.Start();
-            process.WaitForExit();
-            process.ThrowForError();
+            using (var process = GetDockerProcess(args))
+            {
+                process.Start();
+                process.WaitForExit();
+                process.ThrowForError();
 
-            return process.StandardOutput.ReadToEnd();
+                return process.StandardOutput.ReadToEnd();
+            }
         }
 
         /// <summary>
@@ -153,12 +190,14 @@ namespace LclDckr
         public string RemoveContainer(string name)
         {
             var args = $"rm {name}";
-            var process = GetDockerProcess(args);
-            process.Start();
-            process.WaitForExit();
-            process.ThrowForError();
+            using (var process = GetDockerProcess(args))
+            {
+                process.Start();
+                process.WaitForExit();
+                process.ThrowForError();
 
-            return process.StandardOutput.ReadToEnd();
+                return process.StandardOutput.ReadToEnd();
+            }
         }
 
         /// <summary>
@@ -199,26 +238,94 @@ namespace LclDckr
                 }
             }
 
-            var process = GetDockerProcess(args.ToString());
-
-            process.Start();
-            process.WaitForExit();
-            process.ThrowForError();
-
-            var headers = process.StandardOutput.ReadLine();
-
-            var parser = new ContainerInfoParser(headers);
-
-            var containers = new List<ContainerInfo>();
-
-            while (!process.StandardOutput.EndOfStream)
+            List<ContainerInfo> containers;
+            using (var process = GetDockerProcess(args.ToString()))
             {
-                var fields = process.StandardOutput.ReadLine();
-                var container = parser.Parse(fields);
-                containers.Add(container);
+                process.Start();
+                process.WaitForExit();
+                process.ThrowForError();
+
+                var headers = process.StandardOutput.ReadLine();
+
+                var parser = new ContainerInfoParser(headers);
+
+                containers = new List<ContainerInfo>();
+
+                while (!process.StandardOutput.EndOfStream)
+                {
+                    var fields = process.StandardOutput.ReadLine();
+                    var container = parser.Parse(fields);
+                    containers.Add(container);
+                }
             }
 
             return containers;
+        }
+
+        /// <summary>
+        /// Reads a container's logs until a specified value appears or until a timeout occurs. Useful for initialization purposes.
+        /// </summary>
+        /// <param name="container">the container to read the logs from</param>
+        /// <param name="desiredLog">the value to check the logs for i.e. 'Database started'</param>
+        /// <param name="timeout">Will throw a TimeoutException if the value has not been found after this time</param>
+        /// <param name="breakOnError">true will throw an exception on any write to std err</param>
+        /// <returns></returns>
+        public async Task WaitForLogEntryAsync(string container, string desiredLog, TimeSpan timeout, bool breakOnError = true)
+        {
+            var args = $"logs -f {container}";
+
+            TaskCompletionSource<bool> tcs;
+            using (var process = GetDockerProcess(args))
+            {
+                tcs = new TaskCompletionSource<bool>();
+
+                var timeoutTask = Task.Delay(timeout);
+
+                process.OutputDataReceived += (_, eventArgs) =>
+                {
+                    if (eventArgs.Data == null)
+                    {
+                        return;
+                    }
+                    if (eventArgs.Data.Contains(desiredLog))
+                    {
+                        tcs.TrySetResult(true);
+                    }
+                };
+
+                if (breakOnError)
+                {
+                    process.ErrorDataReceived += (_, eventArgs) =>
+                    {
+                        if (eventArgs.Data == null)
+                        {
+                            return;
+                        }
+
+                        if (!process.HasExited)
+                        {
+                            process.Kill();
+                        }
+                        throw new Exception($"error while waiting for log entry: {eventArgs.Data}");
+                    };
+                }
+
+                process.Start();
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
+
+                await Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
+
+                if (!process.HasExited)
+                {
+                    process.Kill();
+                }
+            }
+
+            if (!tcs.Task.IsCompleted)
+            {
+                throw new TimeoutException("Timeout was reached before desired log value was observed.");
+            }
         }
 
         private Process GetDockerProcess(string arguments)

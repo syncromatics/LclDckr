@@ -1,6 +1,9 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using LclDckr.Commands.Ps.Filters;
+using LclDckr.Commands.Run;
 using Xunit;
 
 namespace LclDckr.IntegrationTests
@@ -15,7 +18,7 @@ namespace LclDckr.IntegrationTests
 
             var containerName = "lcldckr-test-container";
 
-            var id = client.RunImage("ubuntu", containerName, interactive: true);
+            var id = client.RunImage("ubuntu", "latest", new RunArguments {Name = containerName, Interactive = true});
             Assert.NotNull(id);
 
             var runningContainer = client
@@ -66,7 +69,7 @@ namespace LclDckr.IntegrationTests
         {
             var client = new DockerClient();
 
-            var contextPath = System.AppContext.BaseDirectory;
+            var contextPath = AppContext.BaseDirectory;
             var dockerFilePath = Path.Combine(contextPath, "Dockerfile");
 
             var imageId = client.Build(contextPath, dockerFilePath);
@@ -80,6 +83,20 @@ namespace LclDckr.IntegrationTests
                 .SingleOrDefault();
 
             Assert.NotNull(container);
+
+            client.StopAndRemoveContainer(containerName);
+        }
+
+        [Fact]
+        public async Task Waits_for_log_entry()
+        {
+            var client = new DockerClient();
+
+            var containerName = "lcldkr-log-test";
+
+            client.RunOrReplace("hello-world", containerName);
+
+            await client.WaitForLogEntryAsync(containerName, "Hello from Docker!", TimeSpan.FromSeconds(30));
 
             client.StopAndRemoveContainer(containerName);
         }
