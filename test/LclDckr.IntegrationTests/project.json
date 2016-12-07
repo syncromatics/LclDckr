@@ -1,5 +1,5 @@
 ﻿{
-  "version": "1.0.0-*",
+  "version": "1.0.3-*",
   "testRunner": "xunit",
   "dependencies": {
     "xunit": "2.2.0-beta4-build3444",
