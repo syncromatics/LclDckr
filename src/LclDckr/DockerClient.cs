@@ -281,13 +281,17 @@ namespace LclDckr
 
                 var timeoutTask = Task.Delay(timeout);
 
+                StringBuilder logBuffer = new StringBuilder();
                 process.OutputDataReceived += (_, eventArgs) =>
                 {
                     if (eventArgs.Data == null)
                     {
                         return;
                     }
-                    if (eventArgs.Data.Contains(desiredLog))
+
+                    logBuffer.Append(eventArgs.Data);
+
+                    if (logBuffer.ToString().Contains(desiredLog))
                     {
                         tcs.TrySetResult(true);
                     }
