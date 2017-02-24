@@ -1,9 +1,9 @@
 ﻿{
-  "version": "1.0.4-*",
+  "version": "1.0.5-*",
   "testRunner": "xunit",
   "dependencies": {
-    "xunit": "2.2.0-beta4-build3444",
-    "LclDckr": "1.0.2-*",
+    "xunit": "2.2.0",
+    "LclDckr": "1.0.5-*",
     "dotnet-test-xunit": "2.2.0-preview2-build1029"
   },
   "buildOptions": {

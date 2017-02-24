@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using LclDckr.Commands.Ps.Filters;
 using LclDckr.Commands.Run;
 using Xunit;
+using System.Net;
 
 namespace LclDckr.IntegrationTests
 {
@@ -99,6 +100,33 @@ namespace LclDckr.IntegrationTests
             await client.WaitForLogEntryAsync(containerName, "Hello from Docker!", TimeSpan.FromSeconds(30));
 
             client.StopAndRemoveContainer(containerName);
+        }
+
+        [Fact]
+        public void Inspects()
+        {
+            var containerName = "lcldkr-inspect-test";
+            var client = new DockerClient();
+
+            try
+            {
+                client.RunOrReplace(
+                    "ubuntu",
+                    tag: null,
+                    args: new RunArguments() { Name = containerName },
+                    command: "tail -f /dev/null"); //we want the container to stay running
+
+                var ipString = client.Inspect(containerName, "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}");
+
+                IPAddress ip;
+                bool isIp = IPAddress.TryParse(ipString, out ip);
+
+                Assert.True(isIp);
+            }
+            finally
+            {
+                client.StopAndRemoveContainer(containerName);
+            }
         }
     }
 }

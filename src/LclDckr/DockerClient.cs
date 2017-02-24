@@ -89,11 +89,11 @@ namespace LclDckr
         /// <param name="args"></param>
         /// <param name="tag"></param>
         /// <returns></returns>
-        public string RunImage(string imageName, string tag, RunArguments args)
+        public string RunImage(string imageName, string tag, RunArguments args, string command = null)
         {
             var tagArg = tag != null ? $":{tag}" : "";
 
-            using (var process = GetDockerProcess($"run {args.ToArgString()} {imageName}{tagArg}"))
+            using (var process = GetDockerProcess($"run {args.ToArgString()} {imageName}{tagArg} {command}"))
             {
                 process.Start();
                 process.WaitForExit();
@@ -120,11 +120,11 @@ namespace LclDckr
             return RunOrReplace(imageName, null, arguments);
         }
 
-        public string RunOrReplace(string imageName, string tag, RunArguments args)
+        public string RunOrReplace(string imageName, string tag, RunArguments args, string command = null)
         {
             StopAndRemoveContainer(args.Name);
             PullImage(imageName, tag);
-            return RunImage(imageName, tag, args);
+            return RunImage(imageName, tag, args, command);
         }
 
         /// <summary>
@@ -329,6 +329,28 @@ namespace LclDckr
             if (!tcs.Task.IsCompleted)
             {
                 throw new TimeoutException("Timeout was reached before desired log value was observed.");
+            }
+        }
+
+        /// <summary>
+        /// Inspects a container
+        /// </summary>
+        /// <param name="name">The name or container id</param>
+        /// <param name="format">Format the output using the given Go template, should not be quoted</param>
+        /// <returns></returns>
+        public string Inspect(string name, string format = null)
+        {
+            var formatArg = format == null ? "" : $"--format=\"{format}\"";
+
+            using (var process = GetDockerProcess($"inspect {formatArg} {name}"))
+            {
+                process.Start();
+                process.WaitForExit();
+                process.ThrowForError();
+
+                //There's always a \n at the end, if you're using format and expecting
+                //an IP or bool, this will be unexpected, so lets remove it.
+                return process.StandardOutput.ReadToEnd()?.TrimEnd();
             }
         }
 
