@@ -128,5 +128,20 @@ namespace LclDckr.IntegrationTests
                 client.StopAndRemoveContainer(containerName);
             }
         }
+
+        [Fact]
+        public void Force_remove()
+        {
+            var client = new DockerClient();
+            client.PullImage("ubuntu");
+
+            var containerName = "lcldckr-test-container";
+
+            var id = client.RunImage("ubuntu", "latest", new RunArguments { Name = containerName, Interactive = true });
+            Assert.NotNull(id);
+
+            id = client.RemoveContainer(containerName, force: true);
+            Assert.NotNull(id);
+        }
     }
 }

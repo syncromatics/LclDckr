@@ -187,9 +187,10 @@ namespace LclDckr
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        public string RemoveContainer(string name)
+        public string RemoveContainer(string name, bool force = false)
         {
-            var args = $"rm {name}";
+            string forceArg = force ? "-f " : "";
+            var args = $"rm {forceArg}{name}";
             using (var process = GetDockerProcess(args))
             {
                 process.Start();
