@@ -99,7 +99,9 @@ namespace LclDckr
                 process.WaitForExit();
                 process.ThrowForError();
 
-                return process.StandardOutput.ReadToEnd();
+                return process.StandardOutput
+                    .ReadToEnd()
+                    .Replace("\n", "");
             }
         }
 
@@ -160,7 +162,9 @@ namespace LclDckr
                 process.WaitForExit();
                 process.ThrowForError();
 
-                return process.StandardOutput.ReadToEnd();
+                return process.StandardOutput
+                    .ReadToEnd()
+                    .Replace("\n","");
             }
         }
 
@@ -269,9 +273,9 @@ namespace LclDckr
         /// <param name="container">the container to read the logs from</param>
         /// <param name="desiredLog">the value to check the logs for i.e. 'Database started'</param>
         /// <param name="timeout">Will throw a TimeoutException if the value has not been found after this time</param>
-        /// <param name="breakOnError">true will throw an exception on any write to std err</param>
-        /// <returns></returns>
-        public async Task WaitForLogEntryAsync(string container, string desiredLog, TimeSpan timeout, bool breakOnError = true)
+        /// <param name="breakOnError">true will break and return false on any write to std err</param>
+        /// <returns>Whether or not the log entry was found</returns>
+        public async Task<bool> WaitForLogEntryAsync(string container, string desiredLog, TimeSpan timeout, bool breakOnError = true)
         {
             var args = $"logs -f {container}";
 
@@ -279,8 +283,6 @@ namespace LclDckr
             using (var process = GetDockerProcess(args))
             {
                 tcs = new TaskCompletionSource<bool>();
-
-                var timeoutTask = Task.Delay(timeout);
 
                 StringBuilder logBuffer = new StringBuilder();
                 process.OutputDataReceived += (_, eventArgs) =>
@@ -307,30 +309,23 @@ namespace LclDckr
                             return;
                         }
 
-                        if (!process.HasExited)
-                        {
-                            process.Kill();
-                        }
-                        throw new Exception($"error while waiting for log entry: {eventArgs.Data}");
+                        tcs.SetResult(false);
                     };
                 }
 
                 process.Start();
+
+                var timeoutTask = Task.Delay(timeout);
+
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
 
                 await Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
 
-                if (!process.HasExited)
-                {
-                    process.Kill();
-                }
+                process.Kill();
             }
 
-            if (!tcs.Task.IsCompleted)
-            {
-                throw new TimeoutException("Timeout was reached before desired log value was observed.");
-            }
+            return tcs.Task.IsCompleted && tcs.Task.Result;
         }
 
         /// <summary>
