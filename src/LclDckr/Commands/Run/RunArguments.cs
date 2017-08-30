@@ -11,9 +11,11 @@ namespace LclDckr.Commands.Run
 
         public string HostName { get; set; }
 
-        public IDictionary<string, string> EnvironmentArgs = new Dictionary<string, string>();
+        public IDictionary<string, string> EnvironmentArgs { get; set; }  = new Dictionary<string, string>();
 
-        public IList<string> Volumes = new List<string>();
+        public IList<string> Volumes { get; set; }  = new List<string>();
+
+        public IDictionary<string, string> PortMappings { get; set; }  = new Dictionary<string, string>();
 
         public string ToArgString()
         {
@@ -42,6 +44,11 @@ namespace LclDckr.Commands.Run
             foreach (var volume in Volumes)
             {
                 args.Append($" -v {volume}");
+            }
+
+            foreach (var mapping in PortMappings)
+            {
+                args.Append($" -p {mapping.Key}:{mapping.Value}");
             }
 
             return args.ToString();
