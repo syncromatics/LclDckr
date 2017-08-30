@@ -271,66 +271,32 @@ namespace LclDckr
         /// <param name="timeout">Will throw a TimeoutException if the value has not been found after this time</param>
         /// <param name="breakOnError">true will throw an exception on any write to std err</param>
         /// <returns></returns>
-        public async Task WaitForLogEntryAsync(string container, string desiredLog, TimeSpan timeout, bool breakOnError = true)
+        public async Task WaitForLogEntryAsync(string container, string desiredLog, TimeSpan timeout,
+            bool breakOnError = true)
         {
-            var args = $"logs -f {container}";
+            var args = $"logs {container}";
+            var watch = new Stopwatch();
+            watch.Start();
 
-            TaskCompletionSource<bool> tcs;
-            using (var process = GetDockerProcess(args))
+            while (watch.Elapsed < timeout)
             {
-                tcs = new TaskCompletionSource<bool>();
-
-                var timeoutTask = Task.Delay(timeout);
-
-                StringBuilder logBuffer = new StringBuilder();
-                process.OutputDataReceived += (_, eventArgs) =>
+                using (var process = GetDockerProcess(args))
                 {
-                    if (eventArgs.Data == null)
-                    {
+                    process.Start();
+
+                    process.WaitForExit((int) TimeSpan.FromSeconds(10).TotalMilliseconds);
+
+                    if (process.ExitCode != 0 && breakOnError)
+                        throw new TimeoutException($"An error has occured. {process.StandardError.ReadToEnd()}");
+
+                    if (process.StandardOutput.ReadToEnd().Contains(desiredLog))
                         return;
-                    }
-
-                    logBuffer.Append(eventArgs.Data);
-
-                    if (logBuffer.ToString().Contains(desiredLog))
-                    {
-                        tcs.TrySetResult(true);
-                    }
-                };
-
-                if (breakOnError)
-                {
-                    process.ErrorDataReceived += (_, eventArgs) =>
-                    {
-                        if (eventArgs.Data == null)
-                        {
-                            return;
-                        }
-
-                        if (!process.HasExited)
-                        {
-                            process.Kill();
-                        }
-                        throw new Exception($"error while waiting for log entry: {eventArgs.Data}");
-                    };
                 }
 
-                process.Start();
-                process.BeginOutputReadLine();
-                process.BeginErrorReadLine();
-
-                await Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
-
-                if (!process.HasExited)
-                {
-                    process.Kill();
-                }
+                await Task.Delay(TimeSpan.FromMilliseconds(20));
             }
 
-            if (!tcs.Task.IsCompleted)
-            {
-                throw new TimeoutException("Timeout was reached before desired log value was observed.");
-            }
+            throw new TimeoutException("Timeout was reached before desired log value was observed.");
         }
 
         /// <summary>

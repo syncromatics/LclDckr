@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>A dotnet wrapper around the docker cli.</Description>
+    <VersionPrefix>1.0.6</VersionPrefix>
+    <Authors>Syncromatics</Authors>
+    <TargetFramework>netstandard1.3</TargetFramework>
+    <AssemblyName>LclDckr</AssemblyName>
+    <PackageId>LclDckr</PackageId>
+    <PackageTags>Docker;Local Docker;Docker Cli</PackageTags>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Diagnostics.Process" Version="4.3.0" />
+  </ItemGroup>
+</Project>
