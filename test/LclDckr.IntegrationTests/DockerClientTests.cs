@@ -94,11 +94,9 @@ namespace LclDckr.IntegrationTests
             var client = new DockerClient();
 
             var containerName = "lcldkr-log-test";
-
             client.RunOrReplace("hello-world", containerName);
 
             await client.WaitForLogEntryAsync(containerName, "Hello from Docker!", TimeSpan.FromSeconds(30));
-
             client.StopAndRemoveContainer(containerName);
         }
 
