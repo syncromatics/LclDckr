@@ -331,7 +331,8 @@ namespace LclDckr
                     Arguments = arguments,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
-                    UseShellExecute = false
+                    UseShellExecute = false,
+                    CreateNoWindow = true
                 }
             };
         }
