@@ -51,7 +51,8 @@ namespace LclDckr
                 process.WaitForExit();
                 process.ThrowForError();
 
-                output = process.StandardOutput.ReadToEnd();
+                // remove trailing \n
+                output = process.StandardOutput.ReadToEnd().TrimEnd();
             }
 
             const string regex = "Successfully built (?<id>[^\\s]+)";
@@ -65,7 +66,7 @@ namespace LclDckr
         /// </summary>
         /// <param name="imageName"></param>
         /// <param name="containerName"></param>
-        /// <returns></returns>
+        /// <returns>Newly created container ID</returns>
         public string RunImage(string imageName, string containerName)
         {
             return RunImage(imageName, null, new RunArguments {Name = containerName});
@@ -76,7 +77,7 @@ namespace LclDckr
         /// </summary>
         /// <param name="imageName"></param>
         /// <param name="args"></param>
-        /// <returns></returns>
+        /// <returns>Newly created container ID</returns>
         public string RunImage(string imageName, RunArguments args)
         {
             return RunImage(imageName, null, args);
@@ -88,7 +89,7 @@ namespace LclDckr
         /// <param name="imageName"></param>
         /// <param name="args"></param>
         /// <param name="tag"></param>
-        /// <returns></returns>
+        /// <returns>Newly created container ID</returns>
         public string RunImage(string imageName, string tag, RunArguments args, string command = null)
         {
             var tagArg = tag != null ? $":{tag}" : "";
@@ -99,7 +100,8 @@ namespace LclDckr
                 process.WaitForExit();
                 process.ThrowForError();
 
-                return process.StandardOutput.ReadToEnd();
+                // remove trailing \n
+                return process.StandardOutput.ReadToEnd().TrimEnd();
             }
         }
 
@@ -160,7 +162,8 @@ namespace LclDckr
                 process.WaitForExit();
                 process.ThrowForError();
 
-                return process.StandardOutput.ReadToEnd();
+                // remove trailing \n
+                return process.StandardOutput.ReadToEnd().TrimEnd();
             }
         }
 
@@ -178,7 +181,8 @@ namespace LclDckr
                 process.WaitForExit();
                 process.ThrowForError();
 
-                return process.StandardOutput.ReadToEnd();
+                // remove trailing \n
+                return process.StandardOutput.ReadToEnd().TrimEnd();
             }
         }
 
@@ -197,7 +201,8 @@ namespace LclDckr
                 process.WaitForExit();
                 process.ThrowForError();
 
-                return process.StandardOutput.ReadToEnd();
+                // remove trailing \n
+                return process.StandardOutput.ReadToEnd().TrimEnd();
             }
         }
 
@@ -317,7 +322,7 @@ namespace LclDckr
 
                 //There's always a \n at the end, if you're using format and expecting
                 //an IP or bool, this will be unexpected, so lets remove it.
-                return process.StandardOutput.ReadToEnd()?.TrimEnd();
+                return process.StandardOutput.ReadToEnd().TrimEnd();
             }
         }
 
