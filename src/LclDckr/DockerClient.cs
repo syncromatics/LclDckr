@@ -62,6 +62,28 @@ namespace LclDckr
         }
 
         /// <summary>
+        /// Removes a specified Docker image.
+        /// </summary>
+        /// <param name="imageName">The name of the image to remove.</param>
+        /// <param name="tag">The tag of the image to remove.</param>
+        /// <param name="force">Whether to remove image even if in use by one or more containers.</param>
+        /// <returns></returns>
+        public string RemoveImage(string imageName, string tag, bool force = false)
+        {
+            string forceArg = force ? "-f " : "";
+            var args = $"image rm {forceArg}{imageName}";
+            using (var process = GetDockerProcess(args))
+            {
+                process.Start();
+                process.WaitForExit();
+                process.ThrowForError();
+
+                // remove trailing \n
+                return process.StandardOutput.ReadToEnd().TrimEnd();
+            }
+        }
+
+        /// <summary>
         /// Runs the specified image in a new container
         /// </summary>
         /// <param name="imageName"></param>
