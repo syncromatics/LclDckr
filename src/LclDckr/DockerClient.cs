@@ -65,10 +65,9 @@ namespace LclDckr
         /// Removes a specified Docker image.
         /// </summary>
         /// <param name="imageName">The name of the image to remove.</param>
-        /// <param name="tag">The tag of the image to remove.</param>
         /// <param name="force">Whether to remove image even if in use by one or more containers.</param>
         /// <returns></returns>
-        public string RemoveImage(string imageName, string tag, bool force = false)
+        public string RemoveImage(string imageName, bool force = false)
         {
             string forceArg = force ? "-f " : "";
             var args = $"image rm {forceArg}{imageName}";
