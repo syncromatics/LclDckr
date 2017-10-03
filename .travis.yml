@@ -12,7 +12,11 @@ script:
   - dotnet restore
   - dotnet build src/LclDckr
   - dotnet test test/LclDckr.IntegrationTests
-  - "if [[ $TRAVIS_PULL_REQUEST == 'false' && $TRAVIS_TAG ]]; then 
-  dotnet pack src/LclDckr --configuration Release;
-  nuget push src/LclDckr/bin/Release/*.nupkg -ApiKey $API_KEY;
-  fi"
+  
+deploy:
+  provider: script
+  script: 
+    - dotnet pack src/LclDckr --configuration Release /p:Version=$TRAVIS_TAG
+    - nuget push src/LclDckr/bin/Release/*.nupkg -ApiKey $API_KEY
+  on:
+    tags: true
