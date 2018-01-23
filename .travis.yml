@@ -1,7 +1,4 @@
 language: csharp
-
-os: linux # Ubuntu 14.04
-dist: trusty
 sudo: required
 dotnet: 2.0.0
 
@@ -12,11 +9,8 @@ script:
   - dotnet restore
   - dotnet build src/LclDckr
   - dotnet test test/LclDckr.IntegrationTests
-  
-deploy:
-  provider: script
-  script: 
-    - dotnet pack src/LclDckr --configuration Release /p:Version=$TRAVIS_TAG
-    - nuget push src/LclDckr/bin/Release/*.nupkg -ApiKey $API_KEY
-  on:
-    tags: true
+  - "if [[ $TRAVIS_PULL_REQUEST == 'false' && $TRAVIS_TAG ]]; then
+  dotnet pack src/LclDckr --configuration Release /p:Version=$TRAVIS_TAG;
+  sudo nuget update -self;
+  sudo nuget push src/LclDckr/bin/Release/*.nupkg -Source https://www.nuget.org -ApiKey $API_KEY;
+  fi"

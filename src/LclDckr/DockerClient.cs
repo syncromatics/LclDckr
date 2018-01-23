@@ -312,11 +312,21 @@ namespace LclDckr
 
                     process.WaitForExit((int) TimeSpan.FromSeconds(10).TotalMilliseconds);
 
-                    if (process.ExitCode != 0 && breakOnError)
-                        throw new TimeoutException($"An error has occured. {process.StandardError.ReadToEnd()}");
+                    if (!process.HasExited)
+                    {
+                        var output = process.StandardOutput.ReadToEnd();
 
-                    if (process.StandardOutput.ReadToEnd().Contains(desiredLog))
-                        return;
+                        if (output.Contains(desiredLog))
+                            return;
+                    }
+                    else
+                    {
+                        if (process.ExitCode != 0 && breakOnError)
+                            throw new TimeoutException($"An error has occured. {process.StandardError.ReadToEnd()}");
+
+                        if (process.StandardOutput.ReadToEnd().Contains(desiredLog))
+                            return;
+                    }
                 }
 
                 await Task.Delay(TimeSpan.FromMilliseconds(20));
@@ -358,7 +368,7 @@ namespace LclDckr
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
-                    CreateNoWindow = true
+                    CreateNoWindow = false
                 }
             };
         }
