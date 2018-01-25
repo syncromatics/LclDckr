@@ -128,6 +128,31 @@ namespace LclDckr.IntegrationTests
         }
 
         [Fact]
+        public async Task GetsLogs()
+        {
+            var containerName = "lcldkr-logs-test";
+            var client = new DockerClient();
+
+            try
+            {
+                client.RunOrReplace(
+                    "hello-world",
+                    tag: null,
+                    args: new RunArguments { Name = containerName });
+
+                await client.WaitForLogEntryAsync(containerName, "Hello from Docker!", TimeSpan.FromSeconds(30));
+
+                var logString = client.Logs(containerName);
+
+                Assert.Contains("Hello from Docker!", logString);
+            }
+            finally
+            {
+                client.StopAndRemoveContainer(containerName);
+            }
+        }
+
+        [Fact]
         public void Force_remove()
         {
             var client = new DockerClient();
