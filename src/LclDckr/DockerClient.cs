@@ -357,6 +357,23 @@ namespace LclDckr
             }
         }
 
+        /// <summary>
+        /// Returns the logs for a container
+        /// </summary>
+        /// <param name="name">The name or container id</param>
+        /// <returns>the logs</returns>
+        public string Logs(string name)
+        {
+            using (var process = GetDockerProcess($"logs {name}"))
+            {
+                process.Start();
+                process.WaitForExit();
+                process.ThrowForError();
+
+                return process.StandardOutput.ReadToEnd();
+            }
+        }
+
         private Process GetDockerProcess(string arguments)
         {
             return new Process
