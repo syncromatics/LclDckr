@@ -1,43 +1,22 @@
 # LclDckr
 
-Write a single-paragraph explanation of this project. It should describe what the software does and why it exists. Finish the paragraph with a compelling reason to use the software.
-
-_Consider a spiffy animated GIF or screenshot here_
+A dotnet wrapper for Docker's CLI
 
 ## Quickstart
 
-This section should get the reader into using the software as quickly as possible. Favor examples over exposistion. For example:
-
-Add the `ThingClient` package to your project:
-
-```bash
-dotnet add package ThingClient
+```c#
+DockerClient client = new DockerClient();
+client.PullImage("hello-world", "latest");
+client.RunImage("hello-world", "hello-container");
+client.StopContainer("hello-container");
+client.RemoveContainer("hello-container");
 ```
-
-Then use it to do a thing:
-
-```csharp
-var client = new ThingClient.Client();
-var result = await client.DoThing();
-if (result.HasThing)
-{
-    Console.WriteLine($"The result is {result.Message}");
-}
-```
-
-If available, add a link to other documentation for this software. Avoid documenting the entire project in this README.
 
 ## Building
 
-_Remove any shields below that do not apply_
-
 [![Travis](https://img.shields.io/travis/syncromatics/LclDckr.svg)](https://travis-ci.org/syncromatics/LclDckr)
-[![Docker Build Status](https://img.shields.io/docker/build//.svg)](https://hub.docker.com/r///)
-[![npm](https://img.shields.io/npm/v/.svg)](https://www.npmjs.com/package/)
 [![NuGet](https://img.shields.io/nuget/v/LclDckr.svg)](https://www.nuget.org/packages/LclDckr/)
 [![NuGet Pre Release](https://img.shields.io/nuget/vpre/LclDckr.svg)](https://www.nuget.org/packages/LclDckr/)
-
-Write a few sentences on how to set up a build environment for this software. These instructions should include prerequisites like required tools, frameworks, and libraries that the reader will need to successfully build this software.
 
 ## Code of Conduct
 
